@@ -4,6 +4,7 @@ options:
   deploymentTarget:
     iOS: "15.0"
   createIntermediateGroups: true
+  projectFormat: xcode15_3
 
 settings:
   base:
