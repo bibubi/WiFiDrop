@@ -7,8 +7,10 @@ if ! command -v xcodegen >/dev/null 2>&1; then
   exit 1
 fi
 
-xcodegen generate
+mkdir -p WiFiDrop/Assets.xcassets/AppIcon.appiconset
+openssl base64 -d -A -in Artwork/AppIcon.b64 -out WiFiDrop/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png
 
+xcodegen generate
 xcodebuild \
   -project WiFiDrop.xcodeproj \
   -scheme WiFiDrop \

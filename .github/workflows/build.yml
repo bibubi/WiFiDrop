@@ -18,6 +18,11 @@ jobs:
       - name: Install XcodeGen
         run: brew install xcodegen
 
+      - name: Materialize app icon
+        run: |
+          mkdir -p WiFiDrop/Assets.xcassets/AppIcon.appiconset
+          openssl base64 -d -A -in Artwork/AppIcon.b64 -out WiFiDrop/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png
+
       - name: Generate Xcode project
         run: xcodegen generate
 
