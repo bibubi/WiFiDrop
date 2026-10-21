@@ -12,8 +12,8 @@ final class HTTPServer {
     private var connections: [ObjectIdentifier: HTTPConnection] = [:]
     private var listener: NWListener?
 
-    /// 监听状态回调（是否成功、实际端口）。
-    var onStateChange: ((Bool, UInt16?) -> Void)?
+    /// 监听状态回调（是否运行、实际端口、失败或等待说明）。
+    var onStateChange: ((Bool, UInt16?, String?) -> Void)?
 
     init(router: Router) {
         self.router = router
@@ -45,24 +45,32 @@ final class HTTPServer {
         do {
             let listener = try NWListener(using: parameters, on: endpointPort)
             self.listener = listener
-            // 广播 Bonjour 服务：触发 iOS 的「本地网络」权限请求，也便于同网段发现设备。
-            listener.service = NWListener.Service(name: "WiFiDrop", type: "_wifidrop._tcp")
 
             listener.stateUpdateHandler = { [weak self, weak listener] state in
                 guard let self, let listener else { return }
                 switch state {
                 case .ready:
                     let actualPort = listener.port?.rawValue ?? port
-                    DispatchQueue.main.async { self.onStateChange?(true, actualPort) }
-                case .failed:
+                    DispatchQueue.main.async { self.onStateChange?(true, actualPort, nil) }
+                case .waiting(let error):
+                    DispatchQueue.main.async {
+                        self.onStateChange?(false, nil, "等待网络：\(error.localizedDescription)")
+                    }
+                case .failed(let error):
                     listener.cancel()
                     if let current = self.listener, current === listener {
                         self.listener = nil
                     }
-                    if attemptsLeft > 0, port < UInt16.max {
+                    var portInUse = false
+                    if case let .posix(code) = error, code == .EADDRINUSE {
+                        portInUse = true
+                    }
+                    if portInUse, attemptsLeft > 0, port < UInt16.max {
                         self.tryListen(port: port + 1, attemptsLeft: attemptsLeft - 1)
                     } else {
-                        DispatchQueue.main.async { self.onStateChange?(false, nil) }
+                        DispatchQueue.main.async {
+                            self.onStateChange?(false, nil, "启动失败：\(error.localizedDescription)")
+                        }
                     }
                 default:
                     break
@@ -95,7 +103,9 @@ final class HTTPServer {
             if attemptsLeft > 0, port < UInt16.max {
                 tryListen(port: port + 1, attemptsLeft: attemptsLeft - 1)
             } else {
-                DispatchQueue.main.async { self.onStateChange?(false, nil) }
+                DispatchQueue.main.async {
+                    self.onStateChange?(false, nil, "启动失败：\(error.localizedDescription)")
+                }
             }
         }
     }

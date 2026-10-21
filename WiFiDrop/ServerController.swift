@@ -14,15 +14,17 @@ final class ServerController: ObservableObject {
 
     private let store = FileStore()
     private var server: HTTPServer?
+    private let permission = NetworkPermissionRequester()
     private let statsQueue = DispatchQueue(label: "com.local.wifidrop.stats", qos: .utility)
 
     /// 启动服务，默认使用 8080 端口，被占用时自动顺延。
     func start() {
         guard server == nil else { return }
         statusMessage = "正在启动…"
+        permission.request()
 
         let server = HTTPServer(router: Router(store: store))
-        server.onStateChange = { [weak self] running, port in
+        server.onStateChange = { [weak self] running, port, detail in
             guard let self else { return }
             self.isRunning = running
             if let port {
@@ -31,7 +33,7 @@ final class ServerController: ObservableObject {
                 self.statusMessage = "服务已开启"
                 self.refreshStats()
             } else {
-                self.statusMessage = "启动失败，端口可能被占用"
+                self.statusMessage = detail ?? "启动失败，端口可能被占用"
             }
         }
         self.server = server
