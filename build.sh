@@ -8,7 +8,7 @@ if ! command -v xcodegen >/dev/null 2>&1; then
 fi
 
 mkdir -p WiFiDrop/Assets.xcassets/AppIcon.appiconset
-openssl base64 -d -A -in Artwork/AppIcon.b64 -out WiFiDrop/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png
+python3 Artwork/make_icon.py WiFiDrop/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png
 
 xcodegen generate
 xcodebuild \
