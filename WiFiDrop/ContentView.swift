@@ -48,6 +48,7 @@ struct ContentView: View {
             Text(controller.statusMessage)
                 .font(.system(size: 14))
                 .foregroundColor(controller.isRunning ? Color(red: 0.13, green: 0.63, blue: 0.35) : .secondary)
+                .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
         .padding(.top, 12)
@@ -143,6 +144,7 @@ struct ContentView: View {
         VStack(alignment: .leading, spacing: 8) {
             tipRow("手机与电脑需连接同一个 WiFi / 热点")
             tipRow("App 需保持在前台，锁屏后服务会暂停")
+            tipRow("若提示启动失败，请到「设置 → 隐私与安全性 → 本地网络」允许本 App")
             tipRow("上传的文件保存在 App 的「文件」目录中")
             tipRow("网页端支持上传、下载、新建文件夹与删除")
         }
